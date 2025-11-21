@@ -234,3 +234,95 @@ async function getWeatherByCoords(lat, lon) {
     }
 }
 
+const cityMapping = {
+    // 주요 광역시 및 특별시
+    "서울": "Seoul", "서울시": "Seoul",
+    "부산": "Busan", "부산시": "Busan",
+    "대구": "Daegu", "대구시": "Daegu",
+    "인천": "Incheon", "인천시": "Incheon",
+    "광주": "Gwangju", "광주시": "Gwangju",
+    "대전": "Daejeon", "대전시": "Daejeon",
+    "울산": "Ulsan", "울산시": "Ulsan",
+    "세종": "Sejong", "세종시": "Sejong",
+    "제주": "Jeju", "제주시": "Jeju", "제주도": "Jeju",
+    "서귀포": "Seogwipo",
+
+    // 경기도
+    "수원": "Suwon", "수원시": "Suwon",
+    "성남": "Seongnam", "분당": "Seongnam",
+    "고양": "Goyang", "일산": "Goyang",
+    "용인": "Yongin", "수지": "Yongin",
+    "부천": "Bucheon",
+    "안산": "Ansan",
+    "안양": "Anyang",
+    "남양주": "Namyangju",
+    "화성": "Hwaseong", "동탄": "Hwaseong",
+    "평택": "Pyeongtaek",
+    "의정부": "Uijeongbu",
+    "파주": "Paju",
+    "김포": "Gimpo",
+    "광명": "Gwangmyeong",
+    "이천": "Icheon",
+    "구리": "Guri",
+    "양주": "Yangju",
+    "포천": "Pocheon",
+    "여주": "Yeoju",
+    "하남": "Hanam",
+    "가평": "Gapyeong",
+    "양평": "Yangpyeong",
+
+    // 강원도
+    "춘천": "Chuncheon",
+    "원주": "Wonju",
+    "강릉": "Gangneung",
+    "속초": "Sokcho",
+    "동해": "Donghae",
+
+    // 충청도
+    "청주": "Cheongju",
+    "천안": "Cheonan",
+    "충주": "Chungju",
+    "아산": "Asan",
+    "공주": "Gongju",
+    "보령": "Boryeong", "대천": "Boryeong",
+
+    // 전라도
+    "전주": "Jeonju",
+    "군산": "Gunsan",
+    "익산": "Iksan",
+    "여수": "Yeosu",
+    "순천": "Suncheon",
+    "목포": "Mokpo",
+
+    // 경상도
+    "포항": "Pohang",
+    "창원": "Changwon", "마산": "Changwon", "진해": "Changwon",
+    "김해": "Gimhae",
+    "구미": "Gumi",
+    "진주": "Jinju",
+    "경주": "Gyeongju",
+    "거제": "Geoje",
+    "양산": "Yangsan",
+    "안동": "Andong"
+};
+
+// [2] 기존 handleSearch 함수를 아래 내용으로 완전히 교체하세요.
+function handleSearch() {
+    const rawInput = cityInput.value.trim(); // 사용자가 입력한 값
+
+    if (rawInput) {
+        // 1. 입력한 값이 한글 리스트에 있는지 확인
+        // cityMapping[rawInput]이 있으면 그 영어 이름(예: Seoul)을 쓰고,
+        // 없으면 입력한 값 그대로(예: New York) 사용
+        const queryCity = cityMapping[rawInput] || rawInput;
+
+        // 2. 영어 이름으로 API 요청
+        getWeather(queryCity);
+        
+        // 3. 입력창 비우기
+        cityInput.value = "";
+    } else {
+        // 입력값이 없을 때 에러 메시지
+        handleError(new Error("도시 이름을 입력해주세요."));
+    }
+}
