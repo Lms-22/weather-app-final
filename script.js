@@ -11,7 +11,6 @@ const appContainer = document.querySelector(".weather-app");
 // --- [2] 상태 관리 ---
 // ❗️❗️❗️ [2단계]에서 발급받은 본인의 API Key를 여기에 임시로 입력하세요.
 // ❗️❗️❗️ (7단계 배포 시 이 부분을 수정하여 숨길 것입니다)
-const API_KEY = "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6";
 let currentUnit = "metric"; // metric: 섭씨(℃), imperial: 화씨(℉)
 let recentCities = JSON.parse(localStorage.getItem("recentCities")) || []; // [5단계] 
 let lastSearchedCity = "";
@@ -234,3 +233,4 @@ async function getWeatherByCoords(lat, lon) {
         handleError(error);
     }
 }
+
