@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 날씨 예보</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="weather-app">
+        <header>
+            <h1>날씨 예보</h1>
+            <div class="search-box">
+                <input type="text" id="city-input" placeholder="도시 이름을 영어로 검색...">
+                <button id="search-btn">🔍</button>
+            </div>
+            <button id="current-location-btn">📍 현재 위치</button>
+        </header>
+
+        <div id="recent-searches">
+            </div>
+
+        <main>
+            <div id="error-message" class="error-message"></div>
+
+            <section id="current-weather">
+                </section>
+
+            <section id="forecast">
+                <h2>5일간의 예보</h2>
+                <div id="forecast-cards" class="forecast-cards">
+                    </div>
+            </section>
+        </main>
+
+        <footer>
+            <button id="unit-toggle">℃ / ℉</button>
+            <div class="logos">
+                <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML">
+                <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS">
+                <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JS">
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
