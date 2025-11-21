@@ -42,9 +42,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /** [3단계] 검색 처리 핸들러 */
 function handleSearch() {
-    const city = cityInput.value.trim();
-    if (city) {
-        getWeather(city);
+    const cityInputVal = cityInput.value.trim();
+    
+    if (cityInputVal) {
+        // 1. 한글 도시 이름인지 확인하고 영어로 변환
+        // 리스트에 없는 도시는 입력한 그대로 사용 (영어 입력 등)
+        const englishName = cityMapping[cityInputVal] || cityInputVal;
+
+        // 2. 변환된 이름(englishName)으로 날씨 검색
+        getWeather(englishName);
+        
+        // 3. 입력창 초기화
         cityInput.value = "";
     } else {
         handleError(new Error("도시 이름을 입력해주세요."));
