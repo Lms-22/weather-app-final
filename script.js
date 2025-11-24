@@ -15,67 +15,116 @@ let currentUnit = "metric"; // metric: 섭씨(℃), imperial: 화씨(℉)
 let recentCities = JSON.parse(localStorage.getItem("recentCities")) || []; // [5단계] 
 let lastSearchedCity = "";
 
-// --- [3] 이벤트 리스너 ---
-// 검색 버튼 클릭 시 
-searchBtn.addEventListener("click", handleSearch);
+if (searchBtn) {
+    searchBtn.addEventListener("click", handleSearch);
+}
 
-// 엔터 키 입력 시 
-cityInput.addEventListener("keyup", (e) => {
-    if (e.key === "Enter") {
-        handleSearch();
-    }
-});
+if (cityInput) {
+    cityInput.addEventListener("keyup", (e) => {
+        if (e.key === "Enter") handleSearch();
+    });
+}
 
-// 단위 변환 버튼 클릭 시 
-unitToggleBtn.addEventListener("click", toggleUnit);
+// =========================================================
+// [3] 핵심 로직 (무료 번역 -> 날씨)
+// =========================================================
 
-// 페이지 로드 시 최근 검색어 표시 
-document.addEventListener("DOMContentLoaded", () => {
-    displayRecentSearches();
-    // 마지막으로 검색한 도시가 있다면 자동으로 로드
-    if (recentCities.length > 0) {
-        getWeather(recentCities[0]);
-    }
-});
+/** * MyMemory API를 사용한 무료 번역 함수 
+ * (회원가입 X, API Key X)
+ */
+async function translateToEnglish(text) {
+    // 한글이 아니면 번역하지 않고 그대로 반환 (영어 입력 시)
+    const hasKorean = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(text);
+    if (!hasKorean) return text;
 
-// --- [4] 핵심 함수 (비즈니스 로직 / 뷰 / 오류 처리) ---
-
-/** [3단계] 검색 처리 핸들러 */
-function handleSearch() {
-    const city = cityInput.value.trim();
-    if (city) {
-        getWeather(city);
-        cityInput.value = "";
-    } else {
-        handleError(new Error("도시 이름을 입력해주세요."));
+    // MyMemory API 주소 (ko -> en)
+    const url = `https://api.mymemory.translated.net/get?q=${text}&langpair=ko|en`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        // 응답 데이터에서 번역된 텍스트 추출
+        if (data.responseData && data.responseData.translatedText) {
+            return data.responseData.translatedText;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error("번역 API 오류:", error);
+        return null;
     }
 }
 
-/** [3단계] API 호출 (비즈니스 로직) [cite: 23, 39] */
-async function getWeather(city) {
-    const unitSymbol = currentUnit === "metric" ? "°C" : "°F";
-    const serverUrl = `./api/getWeather?city=${city}&unit=${currentUnit}`;
+/** 검색 버튼 클릭 시 실행되는 메인 함수 */
+async function handleSearch() {
+    const inputCity = cityInput.value.trim();
 
+    if (!inputCity) {
+        handleError(new Error("도시 이름을 입력해주세요."));
+        return;
+    }
+
+    // 1. 사용자에게 "검색 중..." 이라는 걸 알리면 좋습니다. (선택사항)
+    console.log(`검색 시작: ${inputCity}`);
+
+    // 2. 무료 번역 API를 통해 영어 이름 얻기
+    const englishCityName = await translateToEnglish(inputCity);
+
+    if (!englishCityName) {
+        handleError(new Error("도시 이름을 번역할 수 없습니다. 영문으로 입력해 보세요."));
+        return;
+    }
+
+    console.log(`번역 결과: ${inputCity} -> ${englishCityName}`);
+
+    // 3. 번역된 영어 이름으로 날씨 검색
+    getWeather(englishCityName);
+}
+
+/** 날씨 API 호출 함수 */
+async function getWeather(city) {
+    // 날씨 API 호출
+    const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${WEATHER_API_KEY}&units=metric&lang=kr`;
+    
     try {
-        const res = await fetch(serverUrl); // fetch 호출이 1개로 줄어듦
-        if (!res.ok) {
-            throw new Error(`'${city}' 도시를 찾을 수 없거나 API 오류가 발생했습니다.`);
-        }
+        const response = await fetch(url);
         
-        const { currentData, forecastData } = await res.json(); // 서버에서 2개 데이터를 모두 받아옴
-        // [4단계] 데이터가 성공적으로 오면 UI 업데이트
-        displayWeather(currentData, forecastData, unitSymbol);
-        // [5단계] 성공 시 오류 메시지 숨김
+        if (!response.ok) {
+            if (response.status === 404) throw new Error(`'${city}' 도시를 찾을 수 없습니다.`);
+            else throw new Error("날씨 정보를 가져오는 중 오류가 발생했습니다.");
+        }
+
+        const data = await response.json();
+        
+        // 성공 시 에러 메시지 끄고 화면 업데이트
         handleError(null); 
-        // [5단계] 최근 검색어 저장
-        saveRecentSearch(city);
-        lastSearchedCity = city; // 단위 변환을 위해 마지막 도시 저장
+        displayWeather(data); 
 
     } catch (error) {
-        // [5단계] API 호출 실패 시
         handleError(error);
     }
 }
+
+// =========================================================
+// [4] 화면 표시 및 오류 처리 (기존 코드 유지)
+// =========================================================
+
+function handleError(error) {
+    if (error) {
+        if(errorMessage) {
+            errorMessage.textContent = error.message;
+            errorMessage.style.display = "block";
+        } else {
+            alert(error.message);
+        }
+    } else {
+        if(errorMessage) errorMessage.style.display = "none";
+    }
+}
+
+// 👇 아래에 displayWeather 함수 등 나머지 UI 관련 코드를 그대로 두세요.
+// (만약 지워졌다면, 이전에 만든 displayWeather 코드를 여기에 붙여넣으세요)
 
 /** [4단계] DOM 업데이트 (뷰) [cite: 24, 39] */
 function displayWeather(current, forecast, unitSymbol) {
@@ -231,98 +280,5 @@ async function getWeatherByCoords(lat, lon) {
 
     } catch (error) {
         handleError(error);
-    }
-}
-
-const cityMapping = {
-    // 주요 광역시 및 특별시
-    "서울": "Seoul", "서울시": "Seoul",
-    "부산": "Busan", "부산시": "Busan",
-    "대구": "Daegu", "대구시": "Daegu",
-    "인천": "Incheon", "인천시": "Incheon",
-    "광주": "Gwangju", "광주시": "Gwangju",
-    "대전": "Daejeon", "대전시": "Daejeon",
-    "울산": "Ulsan", "울산시": "Ulsan",
-    "세종": "Sejong", "세종시": "Sejong",
-    "제주": "Jeju", "제주시": "Jeju", "제주도": "Jeju",
-    "서귀포": "Seogwipo",
-
-    // 경기도
-    "수원": "Suwon", "수원시": "Suwon",
-    "성남": "Seongnam", "분당": "Seongnam",
-    "고양": "Goyang", "일산": "Goyang",
-    "용인": "Yongin", "수지": "Yongin",
-    "부천": "Bucheon",
-    "안산": "Ansan",
-    "안양": "Anyang",
-    "남양주": "Namyangju",
-    "화성": "Hwaseong", "동탄": "Hwaseong",
-    "평택": "Pyeongtaek",
-    "의정부": "Uijeongbu",
-    "파주": "Paju",
-    "김포": "Gimpo",
-    "광명": "Gwangmyeong",
-    "이천": "Icheon",
-    "구리": "Guri",
-    "양주": "Yangju",
-    "포천": "Pocheon",
-    "여주": "Yeoju",
-    "하남": "Hanam",
-    "가평": "Gapyeong",
-    "양평": "Yangpyeong",
-
-    // 강원도
-    "춘천": "Chuncheon",
-    "원주": "Wonju",
-    "강릉": "Gangneung",
-    "속초": "Sokcho",
-    "동해": "Donghae",
-
-    // 충청도
-    "청주": "Cheongju",
-    "천안": "Cheonan",
-    "충주": "Chungju",
-    "아산": "Asan",
-    "공주": "Gongju",
-    "보령": "Boryeong", "대천": "Boryeong",
-
-    // 전라도
-    "전주": "Jeonju",
-    "군산": "Gunsan",
-    "익산": "Iksan",
-    "여수": "Yeosu",
-    "순천": "Suncheon",
-    "목포": "Mokpo",
-
-    // 경상도
-    "포항": "Pohang",
-    "창원": "Changwon", "마산": "Changwon", "진해": "Changwon",
-    "김해": "Gimhae",
-    "구미": "Gumi",
-    "진주": "Jinju",
-    "경주": "Gyeongju",
-    "거제": "Geoje",
-    "양산": "Yangsan",
-    "안동": "Andong"
-};
-
-// [2] 기존 handleSearch 함수를 아래 내용으로 완전히 교체하세요.
-function handleSearch() {
-    const rawInput = cityInput.value.trim(); // 사용자가 입력한 값
-
-    if (rawInput) {
-        // 1. 입력한 값이 한글 리스트에 있는지 확인
-        // cityMapping[rawInput]이 있으면 그 영어 이름(예: Seoul)을 쓰고,
-        // 없으면 입력한 값 그대로(예: New York) 사용
-        const queryCity = cityMapping[rawInput] || rawInput;
-
-        // 2. 영어 이름으로 API 요청
-        getWeather(queryCity);
-        
-        // 3. 입력창 비우기
-        cityInput.value = "";
-    } else {
-        // 입력값이 없을 때 에러 메시지
-        handleError(new Error("도시 이름을 입력해주세요."));
     }
 }
