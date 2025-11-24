@@ -2,9 +2,6 @@
 // [1] 설정 및 상태 관리
 // =========================================================
 
-// 👇 여기에 본인의 API Key를 넣어주세요.
-const API_KEY = "내_API_KEY_를_여기에_넣으세요"; 
-
 const cityInput = document.querySelector("#city-input");
 const searchBtn = document.querySelector("#search-btn");
 const currentUnit = "metric"; // 섭씨
