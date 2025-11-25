@@ -1,11 +1,9 @@
-// [파일: api/getWeather.js]
 export default async function handler(request, response) {
-    const API_KEY = process.env.WEATHER_API_KEY;
+    const API_KEY = process.env.WEATHER_API_KEY; // Vercel 환경 변수
     const { city, lat, lon, unit } = request.query;
     
-    // 유효성 검사
     if (!city && (!lat || !lon)) {
-        return response.status(400).json({ error: "도시 이름 또는 좌표가 필요합니다." });
+        return response.status(400).json({ error: "정보가 부족합니다." });
     }
 
     try {
@@ -13,7 +11,7 @@ export default async function handler(request, response) {
         let longitude = lon;
         let locationName = "";
 
-        // 1. 도시 이름으로 요청이 온 경우 -> Geocoding API로 좌표 찾기 (서버에서 수행)
+        // 1. 도시 이름 검색 (Geocoding)
         if (city) {
             const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`;
             const geoRes = await fetch(geoUrl);
@@ -22,38 +20,37 @@ export default async function handler(request, response) {
             if (geoData.length === 0) {
                 return response.status(404).json({ error: `'${city}' 도시를 찾을 수 없습니다.` });
             }
-
             latitude = geoData[0].lat;
             longitude = geoData[0].lon;
-            locationName = geoData[0].name; // 공식 영문명 (예: Seoul)
+            locationName = geoData[0].name;
         }
 
-        // 2. 좌표로 날씨 & 예보 가져오기
+        // 2. 날씨(Weather), 예보(Forecast), 미세먼지(Air Pollution) 동시 호출
         const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=${unit}&lang=kr`;
         const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=${unit}&lang=kr`;
+        const airUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`;
 
-        const [weatherRes, forecastRes] = await Promise.all([
+        const [weatherRes, forecastRes, airRes] = await Promise.all([
             fetch(weatherUrl),
-            fetch(forecastUrl)
+            fetch(forecastUrl),
+            fetch(airUrl)
         ]);
 
-        if (!weatherRes.ok || !forecastRes.ok) {
+        if (!weatherRes.ok || !forecastRes.ok || !airRes.ok) {
             throw new Error("OpenWeatherMap API 오류");
         }
 
         const currentData = await weatherRes.json();
         const forecastData = await forecastRes.json();
+        const airData = await airRes.json(); // 미세먼지 데이터
 
-        // (선택) Geocoding으로 찾은 정확한 도시 이름을 덮어씌워 줌
-        if (locationName) {
-            currentData.name = locationName;
-        }
+        if (locationName) currentData.name = locationName;
 
-        // 3. 결과 응답
-        response.status(200).json({ currentData, forecastData });
+        // 3개 데이터를 모두 응답
+        response.status(200).json({ currentData, forecastData, airData });
 
     } catch (error) {
         console.error(error);
-        response.status(500).json({ error: "서버 내부 오류가 발생했습니다." });
+        response.status(500).json({ error: "서버 오류 발생" });
     }
 }
