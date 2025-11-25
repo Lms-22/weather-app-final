@@ -185,3 +185,23 @@ footer {
         flex-wrap: nowrap;
     }
 }
+/* [추가] 날씨 아이콘 꾸미기 */
+#current-weather img,
+.forecast-card img {
+    background-color: #8ec5fc; /* 하늘색 배경 */
+    background-image: linear-gradient(62deg, #8ec5fc 0%, #e0c3fc 100%); /* 그라데이션 (선택) */
+    border-radius: 50%; /* 동그랗게 만들기 */
+    width: 100px; /* 크기 강제 고정 */
+    height: 100px;
+    padding: 10px; /* 아이콘과 테두리 사이 여백 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* 그림자 효과 */
+    margin: 10px auto;
+    display: block;
+}
+
+/* 예보 카드 안의 아이콘은 조금 작게 */
+.forecast-card img {
+    width: 60px;
+    height: 60px;
+    padding: 5px;
+}

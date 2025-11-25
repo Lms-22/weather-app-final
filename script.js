@@ -99,7 +99,7 @@ async function fetchWeather(params) {
 function displayWeather(current, forecast, unitSymbol) {
     currentWeatherSection.innerHTML = `
         <h2>${current.name}, ${current.sys.country}</h2>
-        <img src="https://openweathermap.org/img/wn/${current.weather[0].icon}@2x.png" alt="${current.weather[0].description}">
+        <img src="https://openweathermap.org/img/wn/${current.weather[0].icon}@4x.png" alt="${current.weather[0].description}">
         <p class="temp" style="font-size: 2.5rem; font-weight: bold;">${current.main.temp.toFixed(1)}${unitSymbol}</p>
         <p class="desc">${current.weather[0].description}</p>
         <div class="details">
@@ -116,7 +116,7 @@ function displayWeather(current, forecast, unitSymbol) {
         card.className = "forecast-card";
         card.innerHTML = `
             <p>${date.toLocaleDateString("ko-KR", { weekday: 'short' })}</p>
-            <img src="https://openweathermap.org/img/wn/${dayData.weather[0].icon}.png" alt="${dayData.weather[0].description}">
+            <img src="https://openweathermap.org/img/wn/${dayData.weather[0].icon}@4x.png" alt="${dayData.weather[0].description}">
             <p>${dayData.main.temp.toFixed(1)}${unitSymbol}</p>
         `;
         forecastCardsContainer.appendChild(card);
