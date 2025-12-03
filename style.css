@@ -176,7 +176,7 @@ footer {
 
 
 /* 반응형 디자인 (태블릿/데스크탑)  */
-@media (min-width: 425px) {
+@media (min-width: 770px) {
     .forecast-cards {
         grid-template-columns: repeat(5, 1fr); /* 5일 예보를 한 줄에 */
     }
